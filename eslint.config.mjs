@@ -8,7 +8,8 @@ export default tsEslint.config(
       "**/node_modules/**",
       "**/dist/**",
       "**/.next/**",
-      "**/build/**"
+      "**/build/**",
+      "**/src/generated/**"
     ],
   },
 

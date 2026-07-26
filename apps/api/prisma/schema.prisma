@@ -1,0 +1,84 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ApplicationStatus {
+  saved
+  applied
+  interview
+  offer
+  rejected
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Application {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @db.Uuid
+  company     String
+  position    String
+  url         String?
+  source      String?
+  location    String?
+  salaryMin   Int?
+  salaryMax   Int?
+  currency    String?           @db.Char(3)
+  status      ApplicationStatus @default(saved)
+  notes       String?
+  appliedAt   DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusChanges  StatusChange[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@map("applications")
+}
+
+model StatusChange {
+  id            String             @id @default(uuid()) @db.Uuid
+  applicationId String             @db.Uuid
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  note          String?
+  changedAt     DateTime           @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, changedAt])
+  @@map("status_changes")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
