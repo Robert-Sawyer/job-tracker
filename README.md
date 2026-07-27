@@ -61,8 +61,6 @@ Services are created by factory functions that take their dependencies as argume
 (`createHealthService(prisma)`) rather than by classes with a DI container. This is the
 idiomatic Node approach and makes test doubles trivial — no framework required.
 
-## Technical decisions
-
 ### Fastify over Express
 
 Fastify was chosen for first-class TypeScript support, a real plugin encapsulation model,
@@ -135,6 +133,61 @@ container rollouts drop live requests.
 Schema changes go through `prisma migrate`, and the generated SQL is committed to the
 repository. `prisma db push` is used only for throwaway experiments and never on any
 shared or deployed environment.
+
+## Technical decisions
+
+### Known trade-offs: pagination and search
+
+Two deliberate simplifications in the applications module, both chosen for the expected
+data volume of this project (hundreds of rows per user, not millions).
+
+**Offset pagination.** `findMany` uses `skip`/`take` with a parallel `count()` inside a
+single transaction, so the page and the total never disagree under concurrent writes. The
+known limitation is that `OFFSET n` forces Postgres to scan and discard the preceding rows,
+so cost grows linearly with page depth, and rows inserted between requests can shift items
+across page boundaries.
+
+The alternative is keyset (cursor) pagination on a stable composite key such as
+`(createdAt, id)`, which stays O(log n) at any depth and is immune to drift. It was not
+adopted here because it cannot express arbitrary user-selected sort columns without a
+cursor per sort order, and it does not provide a total page count — both of which the
+current UI relies on. At this scale the offset cost is unmeasurable, and the endpoint caps
+`limit` at 100 to bound the worst case.
+
+**Case-insensitive `contains` search.** Filtering by company or position uses
+`contains` with `mode: "insensitive"`, which compiles to `ILIKE '%term%'`. A leading
+wildcard makes a B-tree index unusable, so this is a sequential scan over the user's rows.
+
+Production-grade alternatives, in increasing order of effort: a `pg_trgm` extension with a
+GIN index on the searched columns, which makes `ILIKE '%…%'` index-assisted; or a
+`tsvector` column with full-text search, which adds stemming and ranking but loses
+substring matching. Neither is justified while the filtered set is already narrowed by
+`userId` and bounded by an indexed `(userId, createdAt)` lookup.
+
+Both decisions are localised to `application.repository.ts`. Because the service layer
+consumes a repository interface and never constructs queries itself, replacing either
+strategy is a single-file change with no impact on routes, services, or the shared
+contract.
+
+### Token strategy
+
+Access tokens are short-lived JWTs (15 minutes) returned in the response body and sent by
+the client in an `Authorization` header. Refresh tokens are opaque 256-bit random values
+stored only in an `httpOnly`, `SameSite`-scoped cookie restricted to `/api/v1/auth`. The
+split is deliberate: an XSS payload can read an access token that expires in minutes, but
+cannot read the cookie that would grant indefinite access.
+
+Passwords use argon2id with OWASP-recommended parameters (19 MiB, t=2, p=1). Refresh
+tokens use SHA-256 instead, because they carry full entropy and require only a fast,
+indexable lookup — a slow KDF here would prevent hash-based retrieval without adding
+security.
+
+Every refresh rotates: the presented token is revoked and a new one issued. Presenting an
+already-revoked token is treated as theft and revokes every active session for that user.
+
+Login returns an identical error for unknown emails and wrong passwords, and performs a
+dummy hash when no user exists, so neither the message nor the response time can be used
+to enumerate accounts.
 
 ## Learn More
 
