@@ -4,6 +4,7 @@ dist
 .next
 .env
 .env.*
+!.env.test
 !.env.example
 coverage
 *.log
