@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance, FastifyError } from "fastify";
 import { ZodError } from "zod";
+import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
 import { Prisma } from "../generated/prisma/client.js";
 import { AppError } from "../lib/errors.js";
 import { env } from "../config/env.js";
@@ -36,9 +37,31 @@ export default fp(async (app: FastifyInstance) => {
       });
     }
 
+    if (hasZodFastifySchemaValidationErrors(error)) {
+      return reply.code(400).send({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Request does not match schema",
+          details: error.validation,
+        },
+        requestId: request.id,
+      });
+    }
+
     if (error.validation) {
       return reply.code(400).send({
         error: { code: "VALIDATION_ERROR", message: error.message, details: error.validation },
+        requestId: request.id,
+      });
+    }
+
+    if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+      request.log.warn({ err: error, code: error.code }, "handled client error");
+      return reply.code(error.statusCode).send({
+        error: {
+          code: error.code ?? "BAD_REQUEST",
+          message: error.message,
+        },
         requestId: request.id,
       });
     }
