@@ -12,6 +12,8 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { applicationRoutes } from "./modules/applications/application.routes.js";
+import authPlugin from "./plugins/auth.js";
+import { authRoutes } from "./modules/auth/auth.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -27,11 +29,15 @@ export async function buildApp() {
     credentials: true,
   });
 
+  await app.register(authPlugin);
+
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
   await app.register(prismaPlugin);
   await app.register(errorHandlerPlugin);
+
+  await app.register(authRoutes, { prefix: "/api/v1/auth" });
 
   await app.register(healthRoutes);
   await app.register(applicationRoutes, { prefix: "/api/v1/applications" });  // dzień 4

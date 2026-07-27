@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+import argon2 from "argon2";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -11,7 +12,7 @@ async function main() {
     update: {},
     create: {
       email: "demo@example.com",
-      passwordHash: "PLACEHOLDER_REPLACED_ON_DAY_5",
+      passwordHash: await argon2.hash("Demo12345!", { type: argon2.argon2id }),
       displayName: "Demo User",
     },
   });
