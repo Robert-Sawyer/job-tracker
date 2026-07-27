@@ -122,6 +122,28 @@ container, a failing readiness probe only removes it from the load balancer.
 `listen()` and signal handling. Integration tests build the app in-process and use
 `app.inject()`, so the suite never binds a port and runs in parallel without conflicts.
 
+### Testing strategy
+
+Tests are integration-level by default: they build the real Fastify instance via
+`buildApp()`, drive it through Supertest, and hit a real Postgres instance. There are no
+mocked repositories, because the bugs worth catching in a CRUD service live in query
+construction, transaction boundaries, and access control — precisely the layer a mock
+would replace.
+
+The test database is a separate container running with `fsync=off` and a tmpfs data
+directory. Durability guarantees are worthless for a database that is truncated between
+tests, and removing them cuts suite time substantially. Schema is applied with
+`prisma migrate deploy`, the same command used in deployment, so a passing suite also
+proves the committed migration set is coherent.
+
+State is reset with a single `TRUNCATE … RESTART IDENTITY CASCADE` before each test. Test
+files run serially (`singleFork`) since they share one database; per-worker schemas would
+allow parallelism but add complexity disproportionate to a suite of this size.
+
+Testcontainers was considered as an alternative to a compose service. It is cleaner in CI,
+but adds container startup to every local run; with a single dependency the compose
+service wins on iteration speed.
+
 ### Graceful shutdown
 
 `close-with-grace` intercepts `SIGTERM`/`SIGINT`, stops accepting new connections, drains
