@@ -14,10 +14,14 @@ runs:
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
+      env:
+        DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
 
     - name: Generate Prisma client
       shell: bash
       run: pnpm --filter @job-tracker/api exec prisma generate
+      env:
+        DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
 
     - name: Build shared package
       shell: bash
