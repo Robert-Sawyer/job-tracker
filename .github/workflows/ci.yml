@@ -63,6 +63,7 @@ jobs:
         run: pnpm exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=public
+          SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow
 
       - name: Verify migrations are in sync with schema
         working-directory: apps/api

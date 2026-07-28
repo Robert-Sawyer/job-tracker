@@ -7,7 +7,9 @@ RUN corepack enable
 WORKDIR /repo
 
 FROM base AS build
-ENV DATABASE_URL=postgresql://prisma:prisma@localhost:5432/prisma
+#ENV DATABASE_URL=postgresql://prisma:prisma@localhost:5432/prisma
+ENV DATABASE_URL=postgresql://mock:mock@localhost:5432/mock
+ENV SHADOW_DATABASE_URL=postgresql://mock:mock@localhost:5432/mock_shadow
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
