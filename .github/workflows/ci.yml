@@ -66,10 +66,10 @@ jobs:
 
       - name: Verify migrations are in sync with schema
         working-directory: apps/api
-        run: pnpm exec prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --shadow-database-url "$SHADOW_URL" --exit-code
+        run: pnpm exec prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --exit-code
         env:
           DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=public
-          SHADOW_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow
+          SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow
         continue-on-error: false
 
       - name: Run tests with coverage

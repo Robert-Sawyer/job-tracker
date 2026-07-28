@@ -1,12 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-// import { z } from "zod";
 import { registerSchema, loginSchema, userDtoSchema } from "@job-tracker/shared";
 import { createAuthRepository } from "./auth.repository.js";
 import { createAuthService, toUserDto } from "./auth.service.js";
 import { REFRESH_COOKIE, refreshCookieOptions } from "./token.service.js";
 import { UnauthorizedError } from "../../lib/errors.js";
-// import { env } from "../../config/env.js";
 
 const ACCESS_TTL_SECONDS = 15 * 60;
 
@@ -32,13 +30,11 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   app.post("/login", { schema: { body: loginSchema } }, async (request, reply) => {
     const { user, refreshToken } = await service.login(request.body);
-    return reply
-      .setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
-      .send({
-        accessToken: accessTokenFor(user),
-        expiresIn: ACCESS_TTL_SECONDS,
-        user: toUserDto(user),
-      });
+    return reply.setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions).send({
+      accessToken: accessTokenFor(user),
+      expiresIn: ACCESS_TTL_SECONDS,
+      user: toUserDto(user),
+    });
   });
 
   app.post("/refresh", async (request, reply) => {
@@ -46,13 +42,11 @@ export async function authRoutes(fastify: FastifyInstance) {
     if (!presented) throw new UnauthorizedError("Missing refresh token");
 
     const { user, refreshToken } = await service.refresh(presented);
-    return reply
-      .setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
-      .send({
-        accessToken: accessTokenFor(user),
-        expiresIn: ACCESS_TTL_SECONDS,
-        user: toUserDto(user),
-      });
+    return reply.setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions).send({
+      accessToken: accessTokenFor(user),
+      expiresIn: ACCESS_TTL_SECONDS,
+      user: toUserDto(user),
+    });
   });
 
   app.post("/logout", async (request, reply) => {
