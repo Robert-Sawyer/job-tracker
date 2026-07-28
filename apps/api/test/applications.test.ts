@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
-import { createTestApp, resetDb, registerUser, authHeader, prisma, type TestUser } from "./helpers.js";
+import {
+  createTestApp,
+  resetDb,
+  registerUser,
+  authHeader,
+  prisma,
+  type TestUser,
+} from "./helpers.js";
 
 const BASE = "/api/v1/applications";
 
@@ -55,7 +62,11 @@ describe("applications", () => {
   });
 
   it("rejects a blank company name", async () => {
-    await ctx.api.post(BASE).set(authHeader(user)).send({ company: "   ", position: "B" }).expect(400);
+    await ctx.api
+      .post(BASE)
+      .set(authHeader(user))
+      .send({ company: "   ", position: "B" })
+      .expect(400);
   });
 
   it("rejects a malformed id", async () => {
@@ -64,7 +75,10 @@ describe("applications", () => {
   });
 
   it("returns 404 for a missing application", async () => {
-    const res = await ctx.api.get(`${BASE}/${crypto.randomUUID()}`).set(authHeader(user)).expect(404);
+    const res = await ctx.api
+      .get(`${BASE}/${crypto.randomUUID()}`)
+      .set(authHeader(user))
+      .expect(404);
     expect(res.body.error.code).toBe("NOT_FOUND");
   });
 
@@ -79,7 +93,12 @@ describe("applications", () => {
       const res = await ctx.api.get(`${BASE}?page=1&limit=10`).set(authHeader(user)).expect(200);
       expect(res.body.items).toHaveLength(10);
       expect(res.body.meta).toMatchObject({
-        page: 1, limit: 10, total: 25, totalPages: 3, hasNext: true, hasPrev: false,
+        page: 1,
+        limit: 10,
+        total: 25,
+        totalPages: 3,
+        hasNext: true,
+        hasPrev: false,
       });
     });
 
@@ -100,8 +119,12 @@ describe("applications", () => {
     });
 
     it("does not overlap items between pages", async () => {
-      const p1 = await ctx.api.get(`${BASE}?page=1&limit=10&sort=company&order=asc`).set(authHeader(user));
-      const p2 = await ctx.api.get(`${BASE}?page=2&limit=10&sort=company&order=asc`).set(authHeader(user));
+      const p1 = await ctx.api
+        .get(`${BASE}?page=1&limit=10&sort=company&order=asc`)
+        .set(authHeader(user));
+      const p2 = await ctx.api
+        .get(`${BASE}?page=2&limit=10&sort=company&order=asc`)
+        .set(authHeader(user));
       const ids = new Set([...p1.body.items, ...p2.body.items].map((a: { id: string }) => a.id));
       expect(ids.size).toBe(20);
     });
@@ -111,7 +134,11 @@ describe("applications", () => {
     it("filters by multiple statuses", async () => {
       const a = await create({ company: "Interviewing" });
       await create({ company: "Untouched" });
-      await ctx.api.patch(`${BASE}/${a.id}/status`).set(authHeader(user)).send({ status: "interview" }).expect(200);
+      await ctx.api
+        .patch(`${BASE}/${a.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "interview" })
+        .expect(200);
 
       const res = await ctx.api.get(`${BASE}?status=interview`).set(authHeader(user)).expect(200);
       expect(res.body.meta.total).toBe(1);
@@ -122,10 +149,16 @@ describe("applications", () => {
       await create({ company: "Nordcloud", position: "Backend Engineer" });
       await create({ company: "Acme", position: "React Developer" });
 
-      const byCompany = await ctx.api.get(`${BASE}?search=NORDCLOUD`).set(authHeader(user)).expect(200);
+      const byCompany = await ctx.api
+        .get(`${BASE}?search=NORDCLOUD`)
+        .set(authHeader(user))
+        .expect(200);
       expect(byCompany.body.meta.total).toBe(1);
 
-      const byPosition = await ctx.api.get(`${BASE}?search=react`).set(authHeader(user)).expect(200);
+      const byPosition = await ctx.api
+        .get(`${BASE}?search=react`)
+        .set(authHeader(user))
+        .expect(200);
       expect(byPosition.body.meta.total).toBe(1);
     });
   });
@@ -134,22 +167,34 @@ describe("applications", () => {
     it("appends history and stamps appliedAt", async () => {
       const created = await create();
 
-      await ctx.api.patch(`${BASE}/${created.id}/status`).set(authHeader(user))
-        .send({ status: "applied", note: "sent via form" }).expect(200);
-      await ctx.api.patch(`${BASE}/${created.id}/status`).set(authHeader(user))
-        .send({ status: "interview" }).expect(200);
+      await ctx.api
+        .patch(`${BASE}/${created.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "applied", note: "sent via form" })
+        .expect(200);
+      await ctx.api
+        .patch(`${BASE}/${created.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "interview" })
+        .expect(200);
 
       const detail = await ctx.api.get(`${BASE}/${created.id}`).set(authHeader(user)).expect(200);
       expect(detail.body.status).toBe("interview");
       expect(detail.body.appliedAt).not.toBeNull();
-      expect(detail.body.statusChanges.map((s: { toStatus: string }) => s.toStatus))
-        .toEqual(["saved", "applied", "interview"]);
+      expect(detail.body.statusChanges.map((s: { toStatus: string }) => s.toStatus)).toEqual([
+        "saved",
+        "applied",
+        "interview",
+      ]);
     });
 
     it("does not record a change when the status is unchanged", async () => {
       const created = await create();
-      await ctx.api.patch(`${BASE}/${created.id}/status`).set(authHeader(user))
-        .send({ status: "saved" }).expect(200);
+      await ctx.api
+        .patch(`${BASE}/${created.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "saved" })
+        .expect(200);
 
       const count = await prisma.statusChange.count({ where: { applicationId: created.id } });
       expect(count).toBe(1);
@@ -166,7 +211,11 @@ describe("applications", () => {
 
       // cudzy zasób daje 404, nie 403 — nie potwierdzamy jego istnienia
       await ctx.api.get(`${BASE}/${mine.id}`).set(authHeader(other)).expect(404);
-      await ctx.api.patch(`${BASE}/${mine.id}`).set(authHeader(other)).send({ company: "Hijacked" }).expect(404);
+      await ctx.api
+        .patch(`${BASE}/${mine.id}`)
+        .set(authHeader(other))
+        .send({ company: "Hijacked" })
+        .expect(404);
       await ctx.api.delete(`${BASE}/${mine.id}`).set(authHeader(other)).expect(404);
 
       const untouched = await prisma.application.findUniqueOrThrow({ where: { id: mine.id } });

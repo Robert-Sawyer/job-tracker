@@ -9,7 +9,7 @@ export default tsEslint.config(
       "**/dist/**",
       "**/.next/**",
       "**/build/**",
-      "**/src/generated/**"
+      "**/src/generated/**",
     ],
   },
 
@@ -20,11 +20,8 @@ export default tsEslint.config(
 
   {
     files: ["**/*.ts", "**/*.tsx"],
-    extends: [
-      js.configs.recommended,
-      ...tsEslint.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tsEslint.configs.recommended],
   },
 
-  eslintConfigPrettier
+  eslintConfigPrettier,
 );

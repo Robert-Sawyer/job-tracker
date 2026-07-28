@@ -2,11 +2,7 @@ import type { User } from "../../generated/prisma/client.js";
 import type { RegisterInput, LoginInput, UserDto } from "@job-tracker/shared";
 import { ConflictError, UnauthorizedError } from "../../lib/errors.js";
 import { hashPassword, verifyPassword, needsRehash } from "../../lib/password.js";
-import {
-  generateRefreshToken,
-  hashRefreshToken,
-  refreshTokenExpiry,
-} from "./token.service.js";
+import { generateRefreshToken, hashRefreshToken, refreshTokenExpiry } from "./token.service.js";
 import type { AuthRepository } from "./auth.repository.js";
 
 export function toUserDto(user: User): UserDto {
@@ -18,7 +14,10 @@ export function toUserDto(user: User): UserDto {
   };
 }
 
-export function createAuthService(repo: AuthRepository, log: { warn: (o: object, m: string) => void }) {
+export function createAuthService(
+  repo: AuthRepository,
+  log: { warn: (o: object, m: string) => void },
+) {
   async function issueRefreshToken(userId: string) {
     const token = generateRefreshToken();
     await repo.storeRefreshToken(userId, hashRefreshToken(token), refreshTokenExpiry());

@@ -38,16 +38,15 @@ apps/api/src/
 
 └── modules/ domain modules, each split into three layers
 
-
 ### Layered modules
 
 Each domain module is split by responsibility, not by file type:
 
-| Layer | File | Responsibility | Knows about |
-|---|---|---|---|
-| Route | `*.routes.ts` | HTTP concerns: parsing, status codes, headers | Fastify, service |
-| Service | `*.service.ts` | Business rules, orchestration, authorization | Repository, domain errors |
-| Repository | `*.repository.ts` | Data access and query construction | Prisma only |
+| Layer      | File              | Responsibility                                | Knows about               |
+| ---------- | ----------------- | --------------------------------------------- | ------------------------- |
+| Route      | `*.routes.ts`     | HTTP concerns: parsing, status codes, headers | Fastify, service          |
+| Service    | `*.service.ts`    | Business rules, orchestration, authorization  | Repository, domain errors |
+| Repository | `*.repository.ts` | Data access and query construction            | Prisma only               |
 
 The rules are one-directional and enforced by convention:
 

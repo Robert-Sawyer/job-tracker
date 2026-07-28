@@ -10,18 +10,21 @@ declare module "fastify" {
   }
 }
 
-export default fp(async (app: FastifyInstance) => {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+export default fp(
+  async (app: FastifyInstance) => {
+    const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 
-  const prisma = new PrismaClient({
-    adapter,
-    log: env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
+    const prisma = new PrismaClient({
+      adapter,
+      log: env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    });
 
-  await prisma.$connect();
-  app.decorate("prisma", prisma);
+    await prisma.$connect();
+    app.decorate("prisma", prisma);
 
-  app.addHook("onClose", async (instance) => {
-    await instance.prisma.$disconnect();
-  });
-}, { name: "prisma" });
+    app.addHook("onClose", async (instance) => {
+      await instance.prisma.$disconnect();
+    });
+  },
+  { name: "prisma" },
+);

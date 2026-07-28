@@ -8,11 +8,11 @@ export function createApplicationRepository(prisma: PrismaClient) {
       ...(q.status?.length ? { status: { in: q.status } } : {}),
       ...(q.search
         ? {
-          OR: [
-            { company: { contains: q.search, mode: "insensitive" } },
-            { position: { contains: q.search, mode: "insensitive" } },
-          ],
-        }
+            OR: [
+              { company: { contains: q.search, mode: "insensitive" } },
+              { position: { contains: q.search, mode: "insensitive" } },
+            ],
+          }
         : {}),
     };
   }

@@ -22,10 +22,10 @@ export const createApplicationSchema = z
     ...baseFields,
     status: applicationStatusSchema.default("saved"),
   })
-  .refine(
-    (v) => v.salaryMin == null || v.salaryMax == null || v.salaryMin <= v.salaryMax,
-    { message: "salaryMin must not exceed salaryMax", path: ["salaryMin"] },
-  );
+  .refine((v) => v.salaryMin == null || v.salaryMax == null || v.salaryMin <= v.salaryMax, {
+    message: "salaryMin must not exceed salaryMax",
+    path: ["salaryMin"],
+  });
 
 export const updateApplicationSchema = z
   .object({ ...baseFields, status: applicationStatusSchema })

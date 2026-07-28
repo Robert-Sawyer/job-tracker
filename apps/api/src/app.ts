@@ -40,7 +40,7 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: "/api/v1/auth" });
 
   await app.register(healthRoutes);
-  await app.register(applicationRoutes, { prefix: "/api/v1/applications" });  // dzień 4
+  await app.register(applicationRoutes, { prefix: "/api/v1/applications" });
 
   app.addHook("onSend", async (request, reply) => {
     void reply.header("x-request-id", request.id);

@@ -21,23 +21,26 @@ declare module "fastify" {
   }
 }
 
-export default fp(async (app: FastifyInstance) => {
-  await app.register(cookie, { secret: env.JWT_SECRET });
+export default fp(
+  async (app: FastifyInstance) => {
+    await app.register(cookie, { secret: env.JWT_SECRET });
 
-  await app.register(jwt, {
-    secret: env.JWT_SECRET,
-    sign: { expiresIn: env.ACCESS_TOKEN_TTL, iss: "job-tracker-api" },
-    verify: { allowedIss: "job-tracker-api" },
-  });
+    await app.register(jwt, {
+      secret: env.JWT_SECRET,
+      sign: { expiresIn: env.ACCESS_TOKEN_TTL, iss: "job-tracker-api" },
+      verify: { allowedIss: "job-tracker-api" },
+    });
 
-  app.decorateRequest("userId", "");
+    app.decorateRequest("userId", "");
 
-  app.decorate("authenticate", async (request: FastifyRequest) => {
-    try {
-      await request.jwtVerify();
-      request.userId = request.user.sub;
-    } catch {
-      throw new UnauthorizedError("Missing or invalid access token");
-    }
-  });
-}, { name: "auth" });
+    app.decorate("authenticate", async (request: FastifyRequest) => {
+      try {
+        await request.jwtVerify();
+        request.userId = request.user.sub;
+      } catch {
+        throw new UnauthorizedError("Missing or invalid access token");
+      }
+    });
+  },
+  { name: "auth" },
+);

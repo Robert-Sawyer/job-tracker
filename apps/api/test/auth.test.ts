@@ -111,7 +111,9 @@ describe("auth", () => {
         .post("/api/v1/auth/refresh")
         .set("Cookie", user.cookie)
         .expect(200);
-      const currentCookie = (rotated.headers["set-cookie"] as unknown as string[])[0]!.split(";")[0]!;
+      const currentCookie = (rotated.headers["set-cookie"] as unknown as string[])[0]!.split(
+        ";",
+      )[0]!;
 
       const replay = await ctx.api
         .post("/api/v1/auth/refresh")

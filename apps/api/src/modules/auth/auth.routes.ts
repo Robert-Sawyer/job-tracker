@@ -23,14 +23,22 @@ export async function authRoutes(fastify: FastifyInstance) {
     return reply
       .setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
       .code(201)
-      .send({ accessToken: accessTokenFor(user), expiresIn: ACCESS_TTL_SECONDS, user: toUserDto(user) });
+      .send({
+        accessToken: accessTokenFor(user),
+        expiresIn: ACCESS_TTL_SECONDS,
+        user: toUserDto(user),
+      });
   });
 
   app.post("/login", { schema: { body: loginSchema } }, async (request, reply) => {
     const { user, refreshToken } = await service.login(request.body);
     return reply
       .setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
-      .send({ accessToken: accessTokenFor(user), expiresIn: ACCESS_TTL_SECONDS, user: toUserDto(user) });
+      .send({
+        accessToken: accessTokenFor(user),
+        expiresIn: ACCESS_TTL_SECONDS,
+        user: toUserDto(user),
+      });
   });
 
   app.post("/refresh", async (request, reply) => {
@@ -40,7 +48,11 @@ export async function authRoutes(fastify: FastifyInstance) {
     const { user, refreshToken } = await service.refresh(presented);
     return reply
       .setCookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
-      .send({ accessToken: accessTokenFor(user), expiresIn: ACCESS_TTL_SECONDS, user: toUserDto(user) });
+      .send({
+        accessToken: accessTokenFor(user),
+        expiresIn: ACCESS_TTL_SECONDS,
+        user: toUserDto(user),
+      });
   });
 
   app.post("/logout", async (request, reply) => {
