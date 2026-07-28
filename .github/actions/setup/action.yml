@@ -16,12 +16,14 @@ runs:
       run: pnpm install --frozen-lockfile
       env:
         DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
+        SHADOW_DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock_shadow"
 
     - name: Generate Prisma client
       shell: bash
       run: pnpm --filter @job-tracker/api exec prisma generate
       env:
         DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
+        SHADOW_DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock_shadow"
 
     - name: Build shared package
       shell: bash
