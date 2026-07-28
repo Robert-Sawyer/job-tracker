@@ -67,7 +67,7 @@ jobs:
 
       - name: Verify migrations are in sync with schema
         working-directory: apps/api
-        run: pnpm exec prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --exit-code
+        run: pnpm exec prisma migrate diff --from-migrations ./prisma/migrations --to-schema ./prisma/schema.prisma --exit-code
         env:
           DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=public
           SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow

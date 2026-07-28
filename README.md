@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+[![CI](https://github.com/Robert-Sawyer/job-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Robert-Sawyer/job-tracker/actions/workflows/ci.yml)
+
 ## Getting Started
 
 First, run the development server:
@@ -209,6 +211,31 @@ already-revoked token is treated as theft and revokes every active session for t
 Login returns an identical error for unknown emails and wrong passwords, and performs a
 dummy hash when no user exists, so neither the message nor the response time can be used
 to enumerate accounts.
+
+### Continuous integration
+
+Every push and pull request runs four parallel jobs: static analysis (Prettier, ESLint,
+`tsc --noEmit`), integration tests against a real Postgres service container, a full
+workspace build including the Next.js production bundle, and a Docker image build with
+layer caching backed by GitHub Actions cache.
+
+Shared setup — pnpm, Node from `.nvmrc`, a frozen-lockfile install, `prisma generate`, and
+the `shared` package build — lives in a composite action rather than being duplicated
+across jobs. The last two steps are mandatory before any type check: the Prisma client is
+generated rather than committed, and `@job-tracker/shared` is consumed from its build
+output.
+
+The test job additionally runs `prisma migrate diff --exit-code` against a shadow schema,
+which fails the build when `schema.prisma` has drifted from the committed migration set —
+a mismatch that would otherwise surface only at deployment time.
+
+The API image is a multi-stage build. Dependency manifests are copied before source so the
+install layer is cached independently of code changes, `pnpm deploy` flattens the workspace
+into a self-contained production tree, and the runtime stage runs as the unprivileged
+`node` user with a `HEALTHCHECK` hitting `/healthz`.
+
+`main` is protected: all four checks must pass, branches must be current, and force pushes
+are blocked.
 
 ## Learn More
 
