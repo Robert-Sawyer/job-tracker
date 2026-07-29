@@ -63,14 +63,18 @@ jobs:
         run: pnpm exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=public
-          SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow
+
+      - name: Create isolated shadow database for migration diff
+        run: >-
+          node --input-type=module -e
+          "import { Client } from 'pg'; const client = new Client({ host: 'localhost', port: 5434, user: 'jobtracker', password: 'jobtracker', database: 'postgres' }); await client.connect(); await client.query('CREATE DATABASE jobtracker_shadow'); await client.end();"
 
       - name: Verify migrations are in sync with schema
         working-directory: apps/api
         run: pnpm exec prisma migrate diff --from-migrations ./prisma/migrations --to-schema ./prisma/schema.prisma --exit-code
         env:
           DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=public
-          SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_test?schema=shadow
+          SHADOW_DATABASE_URL: postgresql://jobtracker:jobtracker@localhost:5434/jobtracker_shadow?schema=public
         continue-on-error: false
 
       - name: Run tests with coverage
@@ -97,11 +101,8 @@ jobs:
 
       - name: Build all packages
         run: pnpm build
-
-      - name: Build web
-        run: pnpm --filter @job-tracker/web build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
 
   docker:
     name: Docker image

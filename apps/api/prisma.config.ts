@@ -11,6 +11,12 @@ export default defineConfig({
   },
   datasource: {
     url: env("DATABASE_URL"),
-    shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
+    // A shadow database is only needed by development commands such as
+    // `migrate dev` and `migrate diff`. Let Prisma create a temporary one for
+    // local Docker/CI Postgres; a manually configured one must be a separate
+    // database, never another schema in the application database.
+    ...(process.env.SHADOW_DATABASE_URL
+      ? { shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL }
+      : {}),
   },
 });
