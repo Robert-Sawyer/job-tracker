@@ -20,7 +20,6 @@ export async function buildApp() {
     logger: loggerConfig,
     genReqId: (req) => (req.headers["x-request-id"] as string | undefined) ?? randomUUID(),
     requestIdHeader: "x-request-id",
-    disableRequestLogging: false,
     trustProxy: true,
   });
 
