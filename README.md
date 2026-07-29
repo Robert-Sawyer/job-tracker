@@ -237,6 +237,34 @@ into a self-contained production tree, and the runtime stage runs as the unprivi
 `main` is protected: all four checks must pass, branches must be current, and force pushes
 are blocked.
 
+### Client-side data fetching
+
+Authenticated data is fetched from the browser with TanStack Query rather than in React
+Server Components. The access token is held in memory on the client and the refresh cookie
+is scoped to the API origin and the `/api/v1/auth` path, so a server component has no
+credential to forward. Making RSC work would mean widening the cookie scope and proxying
+every request through Next — added surface area for no benefit in an app whose pages are
+all user-specific and non-cacheable. Server rendering is used for the static shell,
+metadata, and unauthenticated pages.
+
+### Token handling in the browser
+
+The access token lives in a module-scoped variable, never in `localStorage` or a
+JavaScript-readable cookie, so it cannot be exfiltrated by injected script and disappears
+on reload. The session is re-established at startup by a single call to `/auth/refresh`
+using the `httpOnly` cookie.
+
+Refresh is single-flight: concurrent 401s share one in-flight refresh promise. This is not
+an optimisation — with rotating refresh tokens, parallel refreshes would invalidate each
+other and trip the server's token-reuse detection, logging the user out.
+
+### Route protection
+
+Route guards in the client layout are a UX affordance, not a security boundary. Every
+protected route is enforced server-side by the API's `authenticate` hook; the guard only
+prevents rendering an empty shell to an unauthenticated visitor. Next.js middleware is not
+used, since the in-memory token is invisible to it.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
