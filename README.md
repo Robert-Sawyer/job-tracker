@@ -285,6 +285,12 @@ Page transitions use `keepPreviousData`, so the table dims rather than collapsin
 skeleton. Pagination exposes only previous and next controls: with offset pagination,
 numbered page links invite exactly the deep jumps that are most expensive to serve.
 
+### Kanban board
+
+Applications can also be managed on a Kanban board grouped by status. Cards can be dragged
+into any status column, including an empty one; each drop updates the application status and
+persists a corresponding `StatusChange` history entry.
+
 ### Form validation shares schemas with the API
 
 Forms are validated with `applicationFormSchema` from `packages/shared`, which wraps the same
