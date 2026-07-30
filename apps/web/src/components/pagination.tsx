@@ -3,10 +3,10 @@
 import type { PaginationMeta } from "@job-tracker/shared";
 
 export function Pagination({
-                             meta,
-                             onPageChange,
-                             disabled = false,
-                           }: {
+  meta,
+  onPageChange,
+  disabled = false,
+}: {
   meta: PaginationMeta;
   onPageChange: (page: number) => void;
   disabled?: boolean;
@@ -22,8 +22,11 @@ export function Pagination({
       className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm"
     >
       <p className="text-slate-500">
-        Showing <span className="font-medium text-slate-900">{from}–{to}</span> of{" "}
-        <span className="font-medium text-slate-900">{meta.total}</span>
+        Showing{" "}
+        <span className="font-medium text-slate-900">
+          {from}–{to}
+        </span>{" "}
+        of <span className="font-medium text-slate-900">{meta.total}</span>
       </p>
 
       <div className="flex items-center gap-2">

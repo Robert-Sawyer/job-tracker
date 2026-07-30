@@ -6,10 +6,10 @@ import { useApplicationFilters } from "@/hooks/use-application-filters";
 type SortField = ListApplicationsQuery["sort"];
 
 export function SortableHeader({
-                                 field,
-                                 children,
-                                 className = "",
-                               }: {
+  field,
+  children,
+  className = "",
+}: {
   field: SortField;
   children: React.ReactNode;
   className?: string;
