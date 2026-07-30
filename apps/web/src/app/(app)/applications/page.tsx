@@ -1,34 +1,55 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import type { Paginated, ApplicationDto } from "@job-tracker/shared";
-import { apiFetch } from "@/lib/api-client";
+import { Suspense } from "react";
+import { useApplicationFilters } from "@/hooks/use-application-filters";
+import { useApplications } from "@/hooks/use-applications";
+import { ApplicationFilters } from "@/components/application-filters";
+import { ApplicationsTable } from "@/components/applications-table";
+import { Pagination } from "@/components/pagination";
+import { TableSkeleton, EmptyState, ErrorState } from "@/components/table-states";
 
-export default function ApplicationsPage() {
-  const { data, isPending, error } = useQuery({
-    queryKey: ["applications", { page: 1 }],
-    queryFn: () => apiFetch<Paginated<ApplicationDto>>("/applications?page=1&limit=20"),
-  });
-
-  if (isPending) return <p className="text-slate-500">Loading applications…</p>;
-  if (error)
-    return (
-      <p role="alert" className="text-red-700">
-        {error.message}
-      </p>
-    );
+function ApplicationsView() {
+  const { filters, setFilters, reset, isFiltered } = useApplicationFilters();
+  const { data, isPending, isPlaceholderData, error, refetch } = useApplications(filters);
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-slate-500">{data.meta.total} applications</p>
-      <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-        {data.items.map((a) => (
-          <li key={a.id} className="px-4 py-3">
-            <span className="font-medium">{a.company}</span>
-            <span className="text-slate-500"> — {a.position}</span>
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Applications</h1>
+      </div>
+
+      <ApplicationFilters />
+
+      <p aria-live="polite" className="sr-only">
+        {data ? `${data.meta.total} applications found` : "Loading applications"}
+      </p>
+
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        {isPending ? (
+          <TableSkeleton />
+        ) : error ? (
+          <ErrorState message={error.message} onRetry={() => void refetch()} />
+        ) : data.items.length === 0 ? (
+          <EmptyState filtered={isFiltered} onClear={reset} />
+        ) : (
+          <>
+            <ApplicationsTable items={data.items} stale={isPlaceholderData} />
+            <Pagination
+              meta={data.meta}
+              disabled={isPlaceholderData}
+              onPageChange={(page) => setFilters({ page })}
+            />
+          </>
+        )}
+      </div>
     </div>
+  );
+}
+
+export default function ApplicationsPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <ApplicationsView />
+    </Suspense>
   );
 }

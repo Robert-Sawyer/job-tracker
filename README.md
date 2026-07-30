@@ -265,6 +265,26 @@ protected route is enforced server-side by the API's `authenticate` hook; the gu
 prevents rendering an empty shell to an unauthenticated visitor. Next.js middleware is not
 used, since the in-memory token is invisible to it.
 
+### URL as the single source of view state
+
+Pagination, sorting, search, and status filters live entirely in the query string. There is
+no client-side store for view state: the URL is parsed on every render through the same
+`listApplicationsQuerySchema` the API uses to validate the request, so a hand-edited or
+stale link degrades to defaults instead of crashing the page.
+
+The consequences are all free: browser history works, filtered views are shareable, reloads
+preserve context, and the TanStack Query cache is keyed by the parsed filter object, so
+returning to a previous page renders from cache instantly.
+
+Navigation uses `router.replace` with `scroll: false`. Pushing history on every keystroke
+in the search box would make the back button unusable, and re-scrolling to the top on every
+sort change is disorienting. Search input is debounced by 350 ms before it reaches the URL,
+which matters given the unindexed `ILIKE` search documented above.
+
+Page transitions use `keepPreviousData`, so the table dims rather than collapsing into a
+skeleton. Pagination exposes only previous and next controls: with offset pagination,
+numbered page links invite exactly the deep jumps that are most expensive to serve.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
