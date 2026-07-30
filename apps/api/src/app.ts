@@ -14,6 +14,7 @@ import {
 import { applicationRoutes } from "./modules/applications/application.routes.js";
 import authPlugin from "./plugins/auth.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { statisticsRoutes } from "./modules/statistics/statistics.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -41,6 +42,7 @@ export async function buildApp() {
 
   await app.register(healthRoutes);
   await app.register(applicationRoutes, { prefix: "/api/v1/applications" });
+  await app.register(statisticsRoutes, { prefix: "/api/v1/statistics" });
 
   app.addHook("onSend", async (request, reply) => {
     void reply.header("x-request-id", request.id);
