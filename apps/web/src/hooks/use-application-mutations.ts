@@ -15,8 +15,16 @@ import {
   updateApplication,
 } from "@/lib/api/applications";
 import { applicationKeys } from "./use-applications";
+import { dashboardStatisticsKeys } from "./use-dashboard-statistics";
 
 type ListSnapshot = Array<[readonly unknown[], Paginated<ApplicationDto> | undefined]>;
+
+function invalidateApplicationData(queryClient: ReturnType<typeof useQueryClient>) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: applicationKeys.all }),
+    queryClient.invalidateQueries({ queryKey: dashboardStatisticsKeys.all }),
+  ]);
+}
 
 function definedOnly<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -39,7 +47,7 @@ export function useCreateApplication() {
 
   return useMutation({
     mutationFn: (input: CreateApplicationInput) => createApplication(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: applicationKeys.all }),
+    onSuccess: () => invalidateApplicationData(queryClient),
   });
 }
 
@@ -77,7 +85,7 @@ export function useUpdateApplication() {
       }
     },
 
-    onSettled: () => queryClient.invalidateQueries({ queryKey: applicationKeys.all }),
+    onSettled: () => invalidateApplicationData(queryClient),
   });
 }
 
@@ -116,7 +124,7 @@ export function useChangeStatus() {
       }
     },
 
-    onSettled: () => queryClient.invalidateQueries({ queryKey: applicationKeys.all }),
+    onSettled: () => invalidateApplicationData(queryClient),
   });
 }
 
@@ -151,6 +159,6 @@ export function useDeleteApplication() {
       }
     },
 
-    onSettled: () => queryClient.invalidateQueries({ queryKey: applicationKeys.all }),
+    onSettled: () => invalidateApplicationData(queryClient),
   });
 }

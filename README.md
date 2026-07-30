@@ -291,6 +291,12 @@ Applications can also be managed on a Kanban board grouped by status. Cards can 
 into any status column, including an empty one; each drop updates the application status and
 persists a corresponding `StatusChange` history entry.
 
+### Dashboard statistics
+
+The dashboard uses PostgreSQL aggregates to show applications created over the last 30 days,
+the conversion share of every current status, and the average time from applying to a first
+interview, offer, or rejection. Aggregation runs in SQL, so the client receives only display-ready data.
+
 ### Form validation shares schemas with the API
 
 Forms are validated with `applicationFormSchema` from `packages/shared`, which wraps the same

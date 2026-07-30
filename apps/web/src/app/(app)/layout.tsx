@@ -30,6 +30,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             Job Tracker
           </Link>
           <div className="flex items-center gap-4 text-sm">
+            <nav className="flex items-center gap-3" aria-label="Main navigation">
+              <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
+                Dashboard
+              </Link>
+              <Link href="/applications" className="text-slate-600 hover:text-slate-900">
+                Applications
+              </Link>
+            </nav>
             <span className="text-slate-500">{user?.email}</span>
             <button
               onClick={() => void logout()}
