@@ -285,6 +285,38 @@ Page transitions use `keepPreviousData`, so the table dims rather than collapsin
 skeleton. Pagination exposes only previous and next controls: with offset pagination,
 numbered page links invite exactly the deep jumps that are most expensive to serve.
 
+### Form validation shares schemas with the API
+
+Forms are validated with `applicationFormSchema` from `packages/shared`, which wraps the same
+field rules the API enforces. HTML inputs always produce strings, so the schema declares a
+string input type and transforms it: `""` becomes `null`, numeric strings become integers, and
+a `date` input value becomes an ISO timestamp. React Hook Form is typed as
+`useForm<Input, unknown, Output>` so field registration works on the raw shape while
+`handleSubmit` receives the transformed payload. Client-side validation is a UX affordance
+only — the API validates every request independently and is the authority.
+
+### Optimistic updates for edits, not for creates
+
+Status changes, edits, and deletes apply to the query cache before the request resolves, with
+a snapshot taken via `getQueriesData` and restored in `onError`. Every cached list variant is
+patched, not just the visible one, so a stale page or filter cannot resurrect a deleted row.
+`cancelQueries` runs first to stop an in-flight fetch from overwriting the optimistic state.
+
+Creates deliberately wait for the server. A new record's id comes from the database and its
+position depends on the active sort and filters, so inserting it locally makes it jump once
+the list refetches. A brief spinner is less jarring than a row that moves.
+
+Deleting does not backfill the row from the next page. The visible page temporarily holds one
+item fewer until `onSettled` invalidates. Recomputing pagination windows client-side across
+arbitrary filters costs far more than it returns.
+
+### Native dialog element for modals
+
+Modals use `<dialog>` with `showModal()`, which provides focus trapping, Escape handling, the
+top layer, and an inert backdrop without any JavaScript. Form contents are conditionally
+rendered so the component unmounts on close — this resets React Hook Form's `defaultValues`,
+which are only read on mount.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -26,6 +26,7 @@ export async function buildApp() {
   await app.register(cors, {
     origin: env.CORS_ORIGIN.split(",").map((o) => o.trim()),
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   });
 
   await app.register(authPlugin);

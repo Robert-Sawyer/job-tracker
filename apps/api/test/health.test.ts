@@ -28,6 +28,19 @@ describe("health endpoints", () => {
     expect(res.headers["x-request-id"]).toBe("test-req-1");
   });
 
+  it("allows browser preflight requests for application mutations", async () => {
+    const res = await ctx.api
+      .options("/api/v1/applications/00000000-0000-0000-0000-000000000000")
+      .set("origin", "http://localhost:3000")
+      .set("access-control-request-method", "PATCH")
+      .set("access-control-request-headers", "authorization,content-type")
+      .expect(204);
+
+    expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+    expect(res.headers["access-control-allow-methods"]).toContain("PATCH");
+    expect(res.headers["access-control-allow-methods"]).toContain("DELETE");
+  });
+
   it("returns a structured 404 for unknown routes", async () => {
     const res = await ctx.api.get("/nope").expect(404);
     expect(res.body.error.code).toBe("ROUTE_NOT_FOUND");
