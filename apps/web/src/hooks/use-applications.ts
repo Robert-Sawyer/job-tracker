@@ -6,7 +6,8 @@ import { listApplications } from "@/lib/api/applications";
 
 export const applicationKeys = {
   all: ["applications"] as const,
-  list: (filters: ListApplicationsQuery) => [...applicationKeys.all, "list", filters] as const,
+  lists: () => [...applicationKeys.all, "list"] as const,
+  list: (filters: ListApplicationsQuery) => [...applicationKeys.lists(), filters] as const,
   detail: (id: string) => [...applicationKeys.all, "detail", id] as const,
 };
 

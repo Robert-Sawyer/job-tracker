@@ -4,14 +4,19 @@ import Link from "next/link";
 import type { ApplicationDto } from "@job-tracker/shared";
 import { StatusBadge } from "./status-badge";
 import { SortableHeader } from "./sortable-header";
+import { ApplicationRowActions } from "./application-row-actions";
 import { formatDate, formatSalary } from "@/lib/format";
 
 export function ApplicationsTable({
   items,
   stale = false,
+  onEdit,
+  onDelete,
 }: {
   items: ApplicationDto[];
   stale?: boolean;
+  onEdit: (application: ApplicationDto) => void;
+  onDelete: (application: ApplicationDto) => void;
 }) {
   return (
     <div className={`overflow-x-auto transition-opacity ${stale ? "opacity-60" : "opacity-100"}`}>
@@ -35,6 +40,9 @@ export function ApplicationsTable({
             </th>
             <SortableHeader field="appliedAt">Applied</SortableHeader>
             <SortableHeader field="createdAt">Added</SortableHeader>
+            <th scope="col" className="px-4 py-2 text-right">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -54,6 +62,9 @@ export function ApplicationsTable({
               </td>
               <td className="px-4 py-3 tabular-nums text-slate-600">{formatDate(a.appliedAt)}</td>
               <td className="px-4 py-3 tabular-nums text-slate-600">{formatDate(a.createdAt)}</td>
+              <td className="px-4 py-2">
+                <ApplicationRowActions application={a} onEdit={onEdit} onDelete={onDelete} />
+              </td>
             </tr>
           ))}
         </tbody>
