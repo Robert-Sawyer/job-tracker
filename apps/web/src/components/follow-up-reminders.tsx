@@ -1,10 +1,7 @@
 "use client";
 
 import { formatDate } from "@/lib/format";
-import {
-  useFollowUpReminders,
-  useMarkReminderRead,
-} from "@/hooks/use-follow-up-reminders";
+import { useFollowUpReminders, useMarkReminderRead } from "@/hooks/use-follow-up-reminders";
 import { Button } from "./ui/button";
 
 export function FollowUpReminders() {
@@ -12,12 +9,17 @@ export function FollowUpReminders() {
   const markRead = useMarkReminderRead();
 
   if (isPending) {
-    return <div className="h-28 animate-pulse rounded-xl bg-slate-100" aria-label="Loading reminders" />;
+    return (
+      <div className="h-28 animate-pulse rounded-xl bg-slate-100" aria-label="Loading reminders" />
+    );
   }
 
   if (error) {
     return (
-      <section className="rounded-xl border border-rose-200 bg-rose-50 p-5" aria-labelledby="reminders">
+      <section
+        className="rounded-xl border border-rose-200 bg-rose-50 p-5"
+        aria-labelledby="reminders"
+      >
         <h2 id="reminders" className="font-semibold text-rose-900">
           Follow-up reminders
         </h2>
@@ -43,7 +45,10 @@ export function FollowUpReminders() {
       </div>
       <ul className="mt-4 divide-y divide-amber-200">
         {reminders.map((reminder) => (
-          <li key={reminder.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+          <li
+            key={reminder.id}
+            className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+          >
             <div>
               <p className="font-medium text-amber-950">
                 {reminder.application.company} â€” {reminder.application.position}

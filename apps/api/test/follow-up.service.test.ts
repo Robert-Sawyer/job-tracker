@@ -45,7 +45,10 @@ describe("follow-up worker service", () => {
 
   it("does not create a reminder after the application receives a response", async () => {
     const application = await createAppliedApplication(new Date("2026-07-01T12:00:00.000Z"));
-    await prisma.application.update({ where: { id: application.id }, data: { status: "interview" } });
+    await prisma.application.update({
+      where: { id: application.id },
+      data: { status: "interview" },
+    });
 
     await expect(
       followUpService.process({
@@ -66,7 +69,10 @@ describe("follow-up worker service", () => {
     });
 
     await expect(
-      followUpService.process({ applicationId: application.id, appliedAt: originalAppliedAt.toISOString() }),
+      followUpService.process({
+        applicationId: application.id,
+        appliedAt: originalAppliedAt.toISOString(),
+      }),
     ).resolves.toEqual({ reminderCreated: false, reason: "application_was_reapplied" });
 
     expect(await prisma.reminder.count({ where: { applicationId: application.id } })).toBe(0);

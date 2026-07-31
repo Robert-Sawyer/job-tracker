@@ -12,9 +12,7 @@ export async function reminderRoutes(fastify: FastifyInstance) {
 
   app.get("/", (request) => service.listUnread(request.userId));
 
-  app.patch(
-    "/:id/read",
-    { schema: { params: reminderIdParamSchema } },
-    (request) => service.markRead(request.userId, request.params.id),
+  app.patch("/:id/read", { schema: { params: reminderIdParamSchema } }, (request) =>
+    service.markRead(request.userId, request.params.id),
   );
 }
