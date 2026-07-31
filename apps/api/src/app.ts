@@ -15,8 +15,14 @@ import { applicationRoutes } from "./modules/applications/application.routes.js"
 import authPlugin from "./plugins/auth.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { statisticsRoutes } from "./modules/statistics/statistics.routes.js";
+import type { FollowUpScheduler } from "./modules/follow-ups/follow-up.scheduler.js";
+import { reminderRoutes } from "./modules/reminders/reminder.routes.js";
 
-export async function buildApp() {
+export interface BuildAppOptions {
+  followUpScheduler: FollowUpScheduler;
+}
+
+export async function buildApp({ followUpScheduler }: BuildAppOptions) {
   const app = Fastify({
     logger: loggerConfig,
     genReqId: (req) => (req.headers["x-request-id"] as string | undefined) ?? randomUUID(),
@@ -41,7 +47,11 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: "/api/v1/auth" });
 
   await app.register(healthRoutes);
-  await app.register(applicationRoutes, { prefix: "/api/v1/applications" });
+  await app.register(applicationRoutes, {
+    prefix: "/api/v1/applications",
+    followUpScheduler,
+  });
+  await app.register(reminderRoutes, { prefix: "/api/v1/reminders" });
   await app.register(statisticsRoutes, { prefix: "/api/v1/statistics" });
 
   app.addHook("onSend", async (request, reply) => {

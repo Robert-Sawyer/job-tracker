@@ -42,6 +42,7 @@ export function createApplicationRepository(prisma: PrismaClient) {
       return prisma.application.create({
         data: {
           ...data,
+          ...(data.status === "applied" && data.appliedAt == null ? { appliedAt: new Date() } : {}),
           user: { connect: { id: userId } },
           statusChanges: { create: { fromStatus: null, toStatus: data.status ?? "saved" } },
         },

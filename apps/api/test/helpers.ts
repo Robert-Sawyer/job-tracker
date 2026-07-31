@@ -4,6 +4,7 @@ import supertest from "supertest";
 import type TestAgent from "supertest/lib/agent.js";
 import { buildApp } from "../src/app.js";
 import { env } from "../src/config/env.js";
+import type { FollowUpScheduler } from "../src/modules/follow-ups/follow-up.scheduler.js";
 
 export const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: env.DATABASE_URL }),
@@ -15,8 +16,15 @@ export async function resetDb() {
   );
 }
 
-export async function createTestApp() {
-  const app = await buildApp();
+const noOpFollowUpScheduler: FollowUpScheduler = {
+  schedule: async () => {},
+  cancel: async () => {},
+};
+
+export async function createTestApp({
+  followUpScheduler = noOpFollowUpScheduler,
+}: { followUpScheduler?: FollowUpScheduler } = {}) {
+  const app = await buildApp({ followUpScheduler });
   await app.ready();
 
   const api = supertest(app.server);

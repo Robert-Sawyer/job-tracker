@@ -10,10 +10,21 @@ import {
 } from "@job-tracker/shared";
 import { createApplicationRepository } from "./application.repository.js";
 import { createApplicationService } from "./application.service.js";
+import type { FollowUpScheduler } from "../follow-ups/follow-up.scheduler.js";
 
-export async function applicationRoutes(fastify: FastifyInstance) {
+export interface ApplicationRoutesOptions {
+  followUpScheduler: FollowUpScheduler;
+}
+
+export async function applicationRoutes(
+  fastify: FastifyInstance,
+  { followUpScheduler }: ApplicationRoutesOptions,
+) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const service = createApplicationService(createApplicationRepository(app.prisma));
+  const service = createApplicationService(
+    createApplicationRepository(app.prisma),
+    followUpScheduler,
+  );
 
   app.addHook("preHandler", app.authenticate);
 

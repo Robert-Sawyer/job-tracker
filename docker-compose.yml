@@ -1,4 +1,38 @@
 services:
+  redis:
+    image: redis:8-alpine
+    container_name: jobtracker-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: jobtracker-worker
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    environment:
+      DATABASE_URL: postgresql://jobtracker:jobtracker@db:5432/jobtracker?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    healthcheck:
+      test: ["NONE"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   db:
     image: postgres:17-alpine
     container_name: jobtracker-db
@@ -50,3 +84,4 @@ services:
 
 volumes:
   db-data:
+  redis-data:
