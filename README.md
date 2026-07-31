@@ -95,8 +95,8 @@ hardening step for delivery guarantees.
 #### TODO
 
 - [ ] Add a transactional outbox: write a follow-up event in the same PostgreSQL transaction as
-  the status change, relay pending events to BullMQ with retrying, and mark them as published
-  only after Redis accepts the job.
+      the status change, relay pending events to BullMQ with retrying, and mark them as published
+      only after Redis accepts the job.
 
 ## Architecture
 
