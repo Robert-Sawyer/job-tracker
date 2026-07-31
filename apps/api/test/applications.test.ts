@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from "vitest";
 import {
   createTestApp,
   resetDb,
@@ -7,19 +7,30 @@ import {
   prisma,
   type TestUser,
 } from "./helpers.js";
+import type { FollowUpScheduler } from "../src/modules/follow-ups/follow-up.scheduler.js";
 
 const BASE = "/api/v1/applications";
 
 describe("applications", () => {
   let ctx: Awaited<ReturnType<typeof createTestApp>>;
   let user: TestUser;
+  const scheduleFollowUp = vi
+    .fn<(applicationId: string, appliedAt: Date) => Promise<void>>()
+    .mockResolvedValue();
+  const cancelFollowUp = vi.fn<(applicationId: string) => Promise<void>>().mockResolvedValue();
+  const followUpScheduler: FollowUpScheduler = {
+    schedule: scheduleFollowUp,
+    cancel: cancelFollowUp,
+  };
 
   beforeAll(async () => {
-    ctx = await createTestApp();
+    ctx = await createTestApp({ followUpScheduler });
   });
 
   beforeEach(async () => {
     await resetDb();
+    scheduleFollowUp.mockClear();
+    cancelFollowUp.mockClear();
     user = await registerUser(ctx.api);
   });
 
@@ -164,6 +175,47 @@ describe("applications", () => {
   });
 
   describe("status changes", () => {
+    it("schedules a follow-up when an application becomes applied", async () => {
+      const created = await create();
+
+      await ctx.api
+        .patch(`${BASE}/${created.id}`)
+        .set(authHeader(user))
+        .send({ status: "applied" })
+        .expect(200);
+
+      expect(scheduleFollowUp).toHaveBeenCalledOnce();
+      expect(scheduleFollowUp).toHaveBeenCalledWith(created.id, expect.any(Date));
+      expect(cancelFollowUp).not.toHaveBeenCalled();
+    });
+
+    it("cancels the follow-up when an application leaves applied", async () => {
+      const created = await create();
+
+      await ctx.api
+        .patch(`${BASE}/${created.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "applied" })
+        .expect(200);
+      await ctx.api
+        .patch(`${BASE}/${created.id}/status`)
+        .set(authHeader(user))
+        .send({ status: "interview" })
+        .expect(200);
+
+      expect(scheduleFollowUp).toHaveBeenCalledOnce();
+      expect(scheduleFollowUp).toHaveBeenCalledWith(created.id, expect.any(Date));
+      expect(cancelFollowUp).toHaveBeenCalledOnce();
+      expect(cancelFollowUp).toHaveBeenCalledWith(created.id);
+    });
+
+    it("schedules a follow-up for an application created as applied", async () => {
+      const created = await create({ status: "applied" });
+
+      expect(scheduleFollowUp).toHaveBeenCalledOnce();
+      expect(scheduleFollowUp).toHaveBeenCalledWith(created.id, expect.any(Date));
+    });
+
     it("appends history and stamps appliedAt", async () => {
       const created = await create();
 

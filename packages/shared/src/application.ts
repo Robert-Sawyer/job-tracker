@@ -66,6 +66,21 @@ export const applicationSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const followUpReminderSchema = z.object({
+  id: z.uuid(),
+  applicationId: z.uuid(),
+  appliedAt: z.date(),
+  createdAt: z.date(),
+  readAt: z.date().nullable(),
+  application: z.object({
+    id: z.uuid(),
+    company: z.string(),
+    position: z.string(),
+  }),
+});
+
+export const reminderIdParamSchema = z.object({ id: z.uuid() });
+
 const optionalText = (max: number) =>
   z
     .string()
@@ -123,3 +138,4 @@ export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
 export type ChangeStatusInput = z.infer<typeof changeStatusSchema>;
 export type ListApplicationsQuery = z.infer<typeof listApplicationsQuerySchema>;
 export type ApplicationDto = z.infer<typeof applicationSchema>;
+export type FollowUpReminderDto = z.infer<typeof followUpReminderSchema>;

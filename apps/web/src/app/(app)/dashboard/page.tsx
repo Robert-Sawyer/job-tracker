@@ -2,6 +2,7 @@
 
 import type { ApplicationStatus } from "@job-tracker/shared";
 import { useDashboardStatistics } from "@/hooks/use-dashboard-statistics";
+import { FollowUpReminders } from "@/components/follow-up-reminders";
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
   saved: "Saved",
@@ -71,6 +72,8 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
         <p className="mt-1 text-sm text-slate-500">A 30-day overview of your job search.</p>
       </div>
+
+      <FollowUpReminders />
 
       <section
         className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"

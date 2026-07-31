@@ -16,6 +16,10 @@ enum ApplicationStatus {
   rejected
 }
 
+enum ReminderType {
+  follow_up
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
@@ -24,31 +28,32 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  applications Application[]
+  applications  Application[]
   refreshTokens RefreshToken[]
 
   @@map("users")
 }
 
 model Application {
-  id          String            @id @default(uuid()) @db.Uuid
-  userId      String            @db.Uuid
-  company     String
-  position    String
-  url         String?
-  source      String?
-  location    String?
-  salaryMin   Int?
-  salaryMax   Int?
-  currency    String?           @db.Char(3)
-  status      ApplicationStatus @default(saved)
-  notes       String?
-  appliedAt   DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id        String            @id @default(uuid()) @db.Uuid
+  userId    String            @db.Uuid
+  company   String
+  position  String
+  url       String?
+  source    String?
+  location  String?
+  salaryMin Int?
+  salaryMax Int?
+  currency  String?           @db.Char(3)
+  status    ApplicationStatus @default(saved)
+  notes     String?
+  appliedAt DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  statusChanges  StatusChange[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusChanges StatusChange[]
+  reminders     Reminder[]
 
   @@index([userId, status])
   @@index([userId, createdAt])
@@ -70,15 +75,30 @@ model StatusChange {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  tokenHash String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Reminder {
+  id                   String       @id @default(uuid()) @db.Uuid
+  applicationId        String       @db.Uuid
+  type                 ReminderType
+  applicationAppliedAt DateTime
+  createdAt            DateTime     @default(now())
+  readAt               DateTime?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, type, applicationAppliedAt])
+  @@index([applicationId, createdAt])
+  @@map("reminders")
 }

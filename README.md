@@ -22,6 +22,82 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Run locally with background jobs
+
+Requirements: Node.js version from `.nvmrc`, pnpm, and Docker Desktop. Create
+`apps/api/.env` from `apps/api/.env.example`, then set a real development JWT secret.
+
+Start PostgreSQL and Redis, apply the committed migrations, then start the worker as a
+separate container:
+
+```bash
+docker compose up -d db redis
+pnpm --dir apps/api db:deploy
+docker compose up -d --build worker
+pnpm dev
+```
+
+The web client is available at [http://localhost:3000](http://localhost:3000). The API uses
+PostgreSQL at `localhost:5433` and Redis at `127.0.0.1:6379`; the worker uses the internal
+Compose hostnames `db` and `redis`.
+
+Useful commands:
+
+```bash
+docker compose logs -f worker
+pnpm --filter @job-tracker/api test
+docker compose down
+```
+
+## Follow-up reminders
+
+When an application becomes `applied`, the API schedules one BullMQ job delayed by seven days.
+The worker is a separate Compose service and owns processing of due jobs.
+
+```mermaid
+flowchart LR
+  A["Application becomes applied"] --> B["API schedules delayed BullMQ job"]
+  B --> C["Redis stores job for 7 days"]
+  C --> D["Worker consumes due job"]
+  D --> E{"Still applied to the same submission?"}
+  E -->|"yes"| F["Upsert reminder in PostgreSQL"]
+  E -->|"no"| G["Discard stale job"]
+  F --> H["Dashboard shows follow-up reminder"]
+```
+
+The scheduler uses the deterministic job id `follow-up-{applicationId}`, so an application has
+at most one waiting follow-up job. Changing its status away from `applied` removes that job.
+The job also carries the exact `appliedAt` timestamp. At execution time the worker checks both
+that the status is still `applied` and that the timestamp still matches; this prevents a job
+from an earlier application cycle from creating an early reminder after the user reapplies.
+
+The `reminders` table is unique on `(applicationId, type, applicationAppliedAt)`. BullMQ may
+retry a job, but the worker's upsert means retrying cannot create duplicate reminders. The
+dashboard lists unread reminders and users can mark one as done.
+
+Authenticated reminder endpoints:
+
+- `GET /api/v1/reminders` returns the current user's unread follow-up reminders.
+- `PATCH /api/v1/reminders/:id/read` marks an owned reminder as read.
+
+Redis is configured with AOF persistence and `maxmemory-policy noeviction`, which prevents
+BullMQ keys from being evicted under memory pressure. The worker drains active jobs and closes
+its Prisma connection during graceful shutdown.
+
+### Reliability boundary
+
+Updating PostgreSQL and adding a Redis job are two separate writes. This implementation does
+not yet use a transactional outbox, so a Redis outage immediately after the database update can
+leave an application in `applied` without a queued job (and the request may report failure even
+though the status change succeeded). A transactional outbox with a relay worker is the next
+hardening step for delivery guarantees.
+
+#### TODO
+
+- [ ] Add a transactional outbox: write a follow-up event in the same PostgreSQL transaction as
+  the status change, relay pending events to BullMQ with retrying, and mark them as published
+  only after Redis accepts the job.
+
 ## Architecture
 
 The API is a standalone Node service (Fastify) consumed by a separate Next.js client.
@@ -144,6 +220,12 @@ allow parallelism but add complexity disproportionate to a suite of this size.
 Testcontainers was considered as an alternative to a compose service. It is cleaner in CI,
 but adds container startup to every local run; with a single dependency the compose
 service wins on iteration speed.
+
+Follow-up coverage has two layers. API tests use an injected scheduler to verify that status
+changes schedule or cancel the correct job without requiring Redis. Worker-service tests use
+the real test PostgreSQL database to verify idempotency, stale-job rejection, and ownership of
+reminder endpoints. The Compose worker is additionally exercised end-to-end against Redis and
+PostgreSQL during local verification.
 
 ### Graceful shutdown
 

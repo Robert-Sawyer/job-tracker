@@ -2,14 +2,17 @@ import "dotenv/config";
 import closeWithGrace from "close-with-grace";
 import { buildApp } from "./app.js";
 import { env } from "./config/env.js";
+import { followUpQueue } from "./modules/follow-ups/follow-up.queue.js";
+import { createFollowUpScheduler } from "./modules/follow-ups/follow-up.scheduler.js";
 
 async function main() {
-  const app = await buildApp();
+  const followUpScheduler = createFollowUpScheduler(followUpQueue);
+  const app = await buildApp({ followUpScheduler });
 
   closeWithGrace({ delay: 10_000 }, async ({ err, signal }) => {
     if (err) app.log.error({ err }, "shutting down due to error");
     else app.log.info({ signal }, "graceful shutdown started");
-    await app.close();
+    await Promise.all([app.close(), followUpScheduler.close()]);
   });
 
   try {
