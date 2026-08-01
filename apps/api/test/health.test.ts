@@ -15,6 +15,8 @@ describe("health endpoints", () => {
   it("reports liveness", async () => {
     const res = await ctx.api.get("/healthz").expect(200);
     expect(res.body).toEqual({ status: "ok" });
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["content-security-policy"]).toContain("default-src 'self'");
   });
 
   it("reports readiness with database up", async () => {
@@ -39,6 +41,21 @@ describe("health endpoints", () => {
     expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
     expect(res.headers["access-control-allow-methods"]).toContain("PATCH");
     expect(res.headers["access-control-allow-methods"]).toContain("DELETE");
+  });
+
+  it("serves public OpenAPI documentation", async () => {
+    const spec = await ctx.api.get("/docs/json").expect(200);
+    expect(spec.body.info.title).toBe("Job Tracker API");
+    expect(spec.body.paths).toHaveProperty("/api/v1/auth/login");
+
+    const ui = await ctx.api.get("/docs/").expect(200);
+    expect(ui.headers["content-security-policy"]).toContain("script-src 'self'");
+    expect(ui.text).toContain("swagger-ui-bundle.js");
+  });
+
+  it("applies the stricter route limit to refresh-token requests", async () => {
+    const res = await ctx.api.post("/api/v1/auth/refresh").expect(401);
+    expect(res.headers["x-ratelimit-limit"]).toBe("30");
   });
 
   it("returns a structured 404 for unknown routes", async () => {
