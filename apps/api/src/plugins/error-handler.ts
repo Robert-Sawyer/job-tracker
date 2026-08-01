@@ -59,6 +59,23 @@ export default fp(
         });
       }
 
+      if (error.statusCode === 429) {
+        const rateLimitError = error as FastifyError & { error?: { message?: unknown } };
+        const message =
+          typeof rateLimitError.error?.message === "string"
+            ? rateLimitError.error.message
+            : "Too many requests. Try again later.";
+
+        request.log.warn({ err: error, code: "RATE_LIMITED" }, "rate limit exceeded");
+        return reply.code(429).send({
+          error: {
+            code: "RATE_LIMITED",
+            message,
+          },
+          requestId: request.id,
+        });
+      }
+
       if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
         request.log.warn({ err: error, code: error.code }, "handled client error");
         return reply.code(error.statusCode).send({
