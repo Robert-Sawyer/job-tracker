@@ -121,7 +121,7 @@ describe("auth", () => {
         .expect(401);
       expect(replay.body.error.message).toContain("reuse");
 
-      // token wydany chwilę wcześniej też przestaje działać
+      // The token issued immediately before the replay is revoked as well.
       await ctx.api.post("/api/v1/auth/refresh").set("Cookie", currentCookie).expect(401);
 
       const active = await prisma.refreshToken.count({
