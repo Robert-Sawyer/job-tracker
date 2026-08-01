@@ -1,7 +1,7 @@
 {
   "name": "job-tracker",
   "version": "1.0.0",
-  "description": "",
+  "description": "A full-stack job application tracker built with Next.js, Fastify, Prisma, PostgreSQL, and Redis.",
   "main": "index.js",
   "scripts": {
     "build": "pnpm -r build",
@@ -11,7 +11,14 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
   },
-  "keywords": [],
+  "keywords": [
+    "job-tracker",
+    "nextjs",
+    "fastify",
+    "prisma",
+    "postgresql",
+    "redis"
+  ],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@11.17.0",
