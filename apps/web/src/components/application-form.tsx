@@ -44,14 +44,14 @@ export function ApplicationForm({
   });
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-4">
+    <form onSubmit={submit} noValidate className="space-y-3">
       {serverError !== undefined ? (
         <p role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {serverError}
         </p>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
         <Field label="Company" htmlFor="company" error={errors.company?.message}>
           <Input
             id="company"
@@ -135,10 +135,10 @@ export function ApplicationForm({
       </div>
 
       <Field label="Notes" htmlFor="notes" error={errors.notes?.message}>
-        <Textarea id="notes" rows={4} invalid={errors.notes !== undefined} {...register("notes")} />
+        <Textarea id="notes" rows={3} invalid={errors.notes !== undefined} {...register("notes")} />
       </Field>
 
-      <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+      <div className="flex justify-end gap-2 border-t border-slate-200 pt-3">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
